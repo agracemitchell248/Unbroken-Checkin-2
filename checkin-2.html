@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unbroken — Check-In 2</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #203445;
+      --sage:       #5da0af;
+      --sage-dark:  #3d7a87;
+      --sage-light: #b5d8df;
+      --sage-bg:    #eef6f8;
+      --amber:      #dfb852;
+      --amber-bg:   #fdf8ec;
+      --coral:      #d56439;
+      --cream:      #f7f4ef;
+      --warm-white: #fdfbf8;
+      --charcoal:   #2c3e50;
+      --mid:        #6b7c8d;
+      --border:     #e2ddd6;
+      --green:      #4a7c59;
+      --green-bg:   #eef4f0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy);
+      color: var(--charcoal);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 5rem;
+    }
+
+    .header { width: 100%; max-width: 660px; text-align: center; margin-bottom: 1.75rem; }
+
+    .logo { font-size: 1.3rem; font-weight: 300; letter-spacing: 0.08em; font-family: 'DM Sans', sans-serif; color: rgba(255,255,255,0.7); }
+
+    .logo-badge {
+      display: inline-block;
+      background: rgba(93,160,175,0.25);
+      color: var(--sage-light);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-top: 0.4rem;
+      border: 1px solid rgba(93,160,175,0.3);
+    }
+
+    .progress-wrap { width: 100%; max-width: 660px; margin-bottom: 1.5rem; }
+
+    .progress-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+
+    .progress-track { height: 3px; background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--sage) 0%, var(--amber) 100%);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
+    .card { background: var(--warm-white); border-radius: 20px; width: 100%; max-width: 660px; overflow: hidden; box-shadow: 0 8px 48px rgba(0,0,0,0.28); }
+
+    .card-body { padding: 2.5rem 2.5rem 2rem; }
+
+    .eyebrow { font-size: 0.68rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sage-dark); margin-bottom: 0.6rem; }
+
+    .screen-title { font-family: 'DM Serif Display', serif; font-size: 1.75rem; line-height: 1.25; color: var(--charcoal); margin-bottom: 0.75rem; }
+
+    .screen-desc { font-size: 0.9rem; color: var(--mid); line-height: 1.75; margin-bottom: 1.75rem; }
+
+    /* ── Info boxes ── */
+    .info-box { border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; gap: 0.85rem; align-items: flex-start; }
+    .info-box .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .info-box .text { font-size: 0.85rem; line-height: 1.65; }
+    .info-box .text strong { display: block; margin-bottom: 0.2rem; font-weight: 500; }
+    .info-box.purpose  { background: var(--sage-bg);  border: 1px solid var(--sage-light); }
+    .info-box.purpose .text  { color: var(--sage-dark); }
+    .info-box.privacy  { background: var(--green-bg); border: 1px solid #b5cfbe; }
+    .info-box.privacy .text  { color: var(--green); }
+    .info-box.reminder { background: var(--amber-bg); border: 1px solid #f0dfa0; }
+    .info-box.reminder .text { color: #7a5c10; }
+
+    /* ── Previous response callback box ── */
+    .previous-box {
+      background: linear-gradient(135deg, var(--navy) 0%, #2d5068 100%);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .previous-box .prev-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--sage-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .previous-box .prev-text {
+      font-family: 'DM Serif Display', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 0.6rem;
+    }
+
+    .previous-box .prev-followup {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.6;
+    }
+
+    /* ── Milestone box ── */
+    .milestone-box {
+      background: linear-gradient(135deg, var(--navy) 0%, #2d5068 100%);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #fff;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .milestone-box .milestone-icon { font-size: 2rem; flex-shrink: 0; }
+    .milestone-box .milestone-content { font-size: 0.85rem; line-height: 1.65; color: rgba(255,255,255,0.85); }
+    .milestone-box .milestone-content strong { display: block; font-size: 0.95rem; color: #fff; margin-bottom: 0.2rem; font-weight: 500; }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 1.25rem; }
+    .field label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--charcoal); margin-bottom: 0.45rem; }
+
+    input[type="text"], input[type="email"], textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input:focus, textarea:focus { border-color: var(--sage); background: var(--warm-white); }
+    textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+    /* ── Scale questions ── */
+    .q-block { margin-bottom: 2rem; }
+    .q-block:last-of-type { margin-bottom: 0; }
+    .q-text { font-size: 0.95rem; line-height: 1.65; color: var(--charcoal); margin-bottom: 0.85rem; font-weight: 400; }
+
+    .q-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--sage-bg);
+      color: var(--sage-dark);
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    .options-list { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .opt-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--cream);
+      user-select: none;
+    }
+
+    .opt-label:hover { border-color: var(--sage-light); background: var(--sage-bg); }
+    .opt-label.selected { border-color: var(--sage); background: var(--sage-bg); }
+    .opt-label input[type="radio"] { accent-color: var(--sage-dark); width: 16px; height: 16px; flex-shrink: 0; }
+    .opt-label span { font-size: 0.9rem; color: var(--charcoal); }
+
+    .divider { height: 1px; background: var(--border); margin: 1.75rem 0; }
+
+    /* ── Nav bar ── */
+    .nav-bar {
+      background: var(--warm-white);
+      border-top: 1px solid var(--border);
+      padding: 1.25rem 2.5rem;
+      display: flex;
+      gap: 0.85rem;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .btn { padding: 0.8rem 1.75rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-primary:hover { background: var(--charcoal); }
+    .btn-primary:disabled { background: #b0bec5; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--mid); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--sage-light); color: var(--charcoal); }
+
+    /* ── Error banner ── */
+    .error-banner { background: #fdf0ef; border: 1px solid #e8b4b0; border-radius: 10px; padding: 0.8rem 1rem; font-size: 0.82rem; color: #a93226; margin-bottom: 1.25rem; display: none; }
+
+    /* ── Steps ── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.3s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Journey dots ── */
+    .journey-dots { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1.5rem 0; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+    .dot.done { background: var(--sage); }
+    .dot.current { background: var(--amber); box-shadow: 0 0 0 3px rgba(223,184,82,0.25); }
+    .dot-wrap { display: flex; flex-direction: column; align-items: center; }
+    .dot-label { font-size: 0.7rem; color: var(--mid); text-align: center; margin-top: 0.4rem; }
+    .dot-connector { width: 24px; height: 2px; background: var(--border); margin-bottom: 1rem; }
+    .dot-connector.done { background: var(--sage); }
+
+    /* ── Lookup loading ── */
+    .lookup-loading { display: none; font-size: 0.82rem; color: var(--sage-dark); padding: 0.5rem 0 0.75rem; align-items: center; gap: 0.5rem; }
+    .lookup-loading.visible { display: flex; }
+    .lookup-spinner { width: 12px; height: 12px; border: 2px solid var(--sage-light); border-top-color: var(--sage-dark); border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; }
+
+    /* ── Thank you ── */
+    .thankyou { text-align: center; padding: 2rem 0 1rem; }
+    .ty-icon { font-size: 3rem; margin-bottom: 1.25rem; display: block; }
+    .ty-title { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--charcoal); margin-bottom: 0.75rem; }
+    .ty-body { font-size: 0.95rem; color: var(--mid); line-height: 1.75; max-width: 440px; margin: 0 auto; }
+
+    /* ── Spinner ── */
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Engagement screen ── */
+    .engagement-item { padding: 0.75rem 0; }
+
+    .engage-check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .engage-check-label input[type="checkbox"] { display: none; }
+
+    .engage-check-box {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      background: var(--cream);
+      flex-shrink: 0;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .engage-check-label input:checked ~ .engage-check-box {
+      background: var(--sage);
+      border-color: var(--sage);
+    }
+
+    .engage-check-label input:checked ~ .engage-check-box::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .engage-feature-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--charcoal);
+    }
+
+    .rating-row {
+      margin-top: 0.85rem;
+      padding: 1rem 1.25rem;
+      background: var(--sage-bg);
+      border-radius: 10px;
+      border-left: 3px solid var(--sage);
+      animation: fadeUp 0.2s ease;
+    }
+
+    .rating-prompt {
+      font-size: 0.82rem;
+      color: var(--sage-dark);
+      font-weight: 500;
+      margin-bottom: 0.65rem;
+    }
+
+    .rating-opts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .rating-opt {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.85rem;
+      color: var(--charcoal);
+    }
+
+    .rating-opt:hover { background: rgba(93,160,175,0.1); }
+
+    .rating-opt input[type="radio"] {
+      accent-color: var(--sage-dark);
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .eng-divider { height: 1px; background: var(--border); margin: 0.25rem 0; }
+
+    @media (max-width: 500px) {
+      .card-body { padding: 1.75rem 1.25rem 1.5rem; }
+      .nav-bar { padding: 1rem 1.25rem; flex-direction: column-reverse; }
+      .btn { width: 100%; text-align: center; }
+      .screen-title { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">Check In</div>
+    <div class="logo-badge">Check-In 2</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="stepLabel">Step 1 of 5</span>
+      <span id="stepPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <!-- ════════════════════════════════
+         SCREEN 1 — Welcome Back + Email
+    ════════════════════════════════ -->
+    <div class="screen active" id="screen1">
+      <div class="card-body">
+        <div class="eyebrow">Welcome Back</div>
+        <h1 class="screen-title">You came back.<br>That matters.</h1>
+        <p class="screen-desc">This is your second check-in with Unbroken. Showing up again — especially when things are still hard — is not a small thing. This will take about 5–8 minutes.</p>
+
+        <div class="journey-dots">
+          <div class="dot-wrap">
+            <div class="dot done"></div>
+            <div class="dot-label">Check-In 1</div>
+          </div>
+          <div class="dot-connector done"></div>
+          <div class="dot-wrap">
+            <div class="dot current"></div>
+            <div class="dot-label">Check-In 2</div>
+          </div>
+          <div class="dot-connector"></div>
+          <div class="dot-wrap">
+            <div class="dot"></div>
+            <div class="dot-label">Check-In 3</div>
+          </div>
+          <div class="dot-connector"></div>
+          <div class="dot-wrap">
+            <div class="dot"></div>
+            <div class="dot-label">Check-In 4</div>
+          </div>
+        </div>
+
+        <div class="milestone-box">
+          <div class="milestone-icon">📈</div>
+          <div class="milestone-content">
+            <strong>Now we can see what's shifting</strong>
+            Because you completed Check-In 1, your responses today will show us — and you — how things are actually changing. Even small movements show up in the data.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label for="emailInput">Enter the email address you used when you first started Unbroken</label>
+          <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="lookup-loading" id="lookupLoading">
+          <div class="lookup-spinner"></div>
+          <span>Looking you up…</span>
+        </div>
+
+        <div class="error-banner" id="err1">Please enter a valid email address.</div>
+
+        <div class="info-box privacy">
+          <div class="icon">🔒</div>
+          <div class="text">
+            <strong>Your privacy is non-negotiable</strong>
+            Your email is used only to connect this check-in to your previous responses. It is never shared or sold. Only you and Aimee can access your data.
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-primary" id="continueBtn1" onclick="lookupAndAdvance()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 2 — PSYCHLOPS Q1 + Q2
+    ════════════════════════════════ -->
+    <div class="screen" id="screen2">
+      <div class="card-body">
+        <div class="eyebrow">About Your Week · Part 1 of 2</div>
+        <h2 class="screen-title">What's been on your mind?</h2>
+        <p class="screen-desc">Think about the <strong>past week</strong>. There are no right or wrong answers — only honest ones.</p>
+
+        <!-- Shown only when lookup succeeded -->
+        <div class="previous-box" id="previousBox" style="display:none;">
+          <div class="prev-label">Last time, you shared</div>
+          <div class="prev-text" id="previousText"></div>
+          <div class="prev-followup">Is this still what's most present — or has something shifted?</div>
+        </div>
+
+        <!-- Shown when no previous response found -->
+        <div class="info-box reminder" id="newUserReminder">
+          <div class="icon">💡</div>
+          <div class="text">Describe what has felt most present for you this week — it may be the same challenge as before, or something new.</div>
+        </div>
+
+        <div class="error-banner" id="err2">Please answer both questions before continuing.</div>
+
+        <div class="q-block">
+          <p class="q-text"><span class="q-number">1</span> What is the main problem or difficulty you have been experiencing this week? Please describe it briefly.</p>
+          <textarea id="psychProblem" placeholder="e.g. Staying motivated in my job search, feeling disconnected from my routine, worried about finances..."></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="q-block">
+          <p class="q-text"><span class="q-number">2</span> How much has this problem affected you during the past week?</p>
+          <div class="options-list">
+            <label class="opt-label"><input type="radio" name="impact" value="0" /><span>Not at all</span></label>
+            <label class="opt-label"><input type="radio" name="impact" value="1" /><span>Slightly</span></label>
+            <label class="opt-label"><input type="radio" name="impact" value="2" /><span>Moderately</span></label>
+            <label class="opt-label"><input type="radio" name="impact" value="3" /><span>Very much</span></label>
+            <label class="opt-label"><input type="radio" name="impact" value="4" /><span>Extremely</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="advance(1)">← Back</button>
+        <button class="btn btn-primary" onclick="advance(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 3 — PSYCHLOPS Q3 + Q4
+    ════════════════════════════════ -->
+    <div class="screen" id="screen3">
+      <div class="card-body">
+        <div class="eyebrow">About Your Week · Part 2 of 2</div>
+        <h2 class="screen-title">Your day-to-day life.</h2>
+        <p class="screen-desc">Still thinking about the <strong>past week</strong>.</p>
+
+        <div class="error-banner" id="err3">Please answer both questions before continuing.</div>
+
+        <div class="q-block">
+          <p class="q-text"><span class="q-number">3</span> How much difficulty have you had doing your day-to-day activities during the past week?</p>
+          <div class="options-list">
+            <label class="opt-label"><input type="radio" name="functioning" value="0" /><span>No difficulty</span></label>
+            <label class="opt-label"><input type="radio" name="functioning" value="1" /><span>Slight difficulty</span></label>
+            <label class="opt-label"><input type="radio" name="functioning" value="2" /><span>Moderate difficulty</span></label>
+            <label class="opt-label"><input type="radio" name="functioning" value="3" /><span>Much difficulty</span></label>
+            <label class="opt-label"><input type="radio" name="functioning" value="4" /><span>Extreme difficulty</span></label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="q-block">
+          <p class="q-text"><span class="q-number">4</span> Overall, how would you rate your wellbeing during the past week?</p>
+          <div class="options-list">
+            <label class="opt-label"><input type="radio" name="wellbeing" value="4" /><span>Very good</span></label>
+            <label class="opt-label"><input type="radio" name="wellbeing" value="3" /><span>Good</span></label>
+            <label class="opt-label"><input type="radio" name="wellbeing" value="2" /><span>Fair</span></label>
+            <label class="opt-label"><input type="radio" name="wellbeing" value="1" /><span>Poor</span></label>
+            <label class="opt-label"><input type="radio" name="wellbeing" value="0" /><span>Very poor</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="advance(2)">← Back</button>
+        <button class="btn btn-primary" onclick="advance(4)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 4 — PSS Q1–5
+    ════════════════════════════════ -->
+    <div class="screen" id="screen4">
+      <div class="card-body">
+        <div class="eyebrow">Stress Check-In · Part 1 of 2</div>
+        <h2 class="screen-title">How stressed have you been?</h2>
+        <p class="screen-desc">The following questions ask about your feelings and thoughts during the <strong>last month</strong>. In each case, indicate how often you felt or thought a certain way.</p>
+
+        <div class="info-box reminder">
+          <div class="icon">💡</div>
+          <div class="text">These are the same questions as your first check-in. Your scores this time will show us — and you — what's actually shifting, even when it doesn't feel that way.</div>
+        </div>
+
+        <div class="error-banner" id="err4">Please answer all questions before continuing.</div>
+
+        <div id="pssBlock1"></div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="advance(3)">← Back</button>
+        <button class="btn btn-primary" onclick="advance(5)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 5 — PSS Q6–10
+    ════════════════════════════════ -->
+    <div class="screen" id="screen5">
+      <div class="card-body">
+        <div class="eyebrow">Stress Check-In · Part 2 of 2</div>
+        <h2 class="screen-title">Almost there.</h2>
+        <p class="screen-desc">Still thinking about the <strong>last month</strong>.</p>
+
+        <div class="error-banner" id="err5">Please answer all questions before submitting.</div>
+
+        <div id="pssBlock2"></div>
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="advance(4)">← Back</button>
+        <button class="btn btn-primary" id="pssNextBtn" onclick="advance(6)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 6 — Engagement Check
+    ════════════════════════════════ -->
+    <div class="screen" id="screen6">
+      <div class="card-body">
+        <div class="eyebrow">How Unbroken Is Working For You</div>
+        <h2 class="screen-title">One last thing.</h2>
+        <p class="screen-desc">Which parts of Unbroken have you been using? Check everything that applies — then let us know how helpful each one has been. <span style="color:var(--sage-dark); font-weight:500;">This is optional, but it really helps us understand what's working for you.</span></p>
+
+        <div class="error-banner" id="err6" style="display:none;"></div>
+
+        <div id="engagementFeatures">
+
+          <!-- Name It Videos -->
+          <div class="engagement-item" id="eng-nameit">
+            <label class="engage-check-label">
+              <input type="checkbox" name="engUsed" value="Name It Videos" onchange="toggleRating('nameit', this.checked)" />
+              <span class="engage-check-box"></span>
+              <span class="engage-feature-name">🎬 Name It Videos</span>
+            </label>
+            <div class="rating-row" id="rating-nameit" style="display:none;">
+              <p class="rating-prompt">How helpful have the Name It Videos been?</p>
+              <div class="rating-opts">
+                <label class="rating-opt"><input type="radio" name="rate-nameit" value="1" /><span>Not helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-nameit" value="2" /><span>Slightly</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-nameit" value="3" /><span>Moderately</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-nameit" value="4" /><span>Very helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-nameit" value="5" /><span>Extremely helpful</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="eng-divider"></div>
+
+          <!-- Breathing Exercises -->
+          <div class="engagement-item" id="eng-breathing">
+            <label class="engage-check-label">
+              <input type="checkbox" name="engUsed" value="Breathing Exercises" onchange="toggleRating('breathing', this.checked)" />
+              <span class="engage-check-box"></span>
+              <span class="engage-feature-name">🌬️ Breathing Exercises</span>
+            </label>
+            <div class="rating-row" id="rating-breathing" style="display:none;">
+              <p class="rating-prompt">How helpful have the Breathing Exercises been?</p>
+              <div class="rating-opts">
+                <label class="rating-opt"><input type="radio" name="rate-breathing" value="1" /><span>Not helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-breathing" value="2" /><span>Slightly</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-breathing" value="3" /><span>Moderately</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-breathing" value="4" /><span>Very helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-breathing" value="5" /><span>Extremely helpful</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="eng-divider"></div>
+
+          <!-- Reset Exercises -->
+          <div class="engagement-item" id="eng-reset">
+            <label class="engage-check-label">
+              <input type="checkbox" name="engUsed" value="Reset Exercises" onchange="toggleRating('reset', this.checked)" />
+              <span class="engage-check-box"></span>
+              <span class="engage-feature-name">🔄 Reset Exercises</span>
+            </label>
+            <div class="rating-row" id="rating-reset" style="display:none;">
+              <p class="rating-prompt">How helpful have the Reset Exercises been?</p>
+              <div class="rating-opts">
+                <label class="rating-opt"><input type="radio" name="rate-reset" value="1" /><span>Not helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-reset" value="2" /><span>Slightly</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-reset" value="3" /><span>Moderately</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-reset" value="4" /><span>Very helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-reset" value="5" /><span>Extremely helpful</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="eng-divider"></div>
+
+          <!-- Course Modules -->
+          <div class="engagement-item" id="eng-course">
+            <label class="engage-check-label">
+              <input type="checkbox" name="engUsed" value="Course Modules" onchange="toggleRating('course', this.checked)" />
+              <span class="engage-check-box"></span>
+              <span class="engage-feature-name">📚 Course Modules</span>
+            </label>
+            <div class="rating-row" id="rating-course" style="display:none;">
+              <p class="rating-prompt">How helpful have the Course Modules been?</p>
+              <div class="rating-opts">
+                <label class="rating-opt"><input type="radio" name="rate-course" value="1" /><span>Not helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-course" value="2" /><span>Slightly</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-course" value="3" /><span>Moderately</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-course" value="4" /><span>Very helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-course" value="5" /><span>Extremely helpful</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="eng-divider"></div>
+
+          <!-- Drop-in Sessions -->
+          <div class="engagement-item" id="eng-dropin">
+            <label class="engage-check-label">
+              <input type="checkbox" name="engUsed" value="Drop-in Sessions" onchange="toggleRating('dropin', this.checked)" />
+              <span class="engage-check-box"></span>
+              <span class="engage-feature-name">🤝 Drop-in Sessions</span>
+            </label>
+            <div class="rating-row" id="rating-dropin" style="display:none;">
+              <p class="rating-prompt">How helpful have the Drop-in Sessions been?</p>
+              <div class="rating-opts">
+                <label class="rating-opt"><input type="radio" name="rate-dropin" value="1" /><span>Not helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-dropin" value="2" /><span>Slightly</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-dropin" value="3" /><span>Moderately</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-dropin" value="4" /><span>Very helpful</span></label>
+                <label class="rating-opt"><input type="radio" name="rate-dropin" value="5" /><span>Extremely helpful</span></label>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /engagementFeatures -->
+
+        <div class="info-box reminder" style="margin-top:1.5rem;">
+          <div class="icon">💡</div>
+          <div class="text">Haven't used some of these yet? That's okay — just check what you have tried. If you haven't used any, you can continue without selecting anything.</div>
+        </div>
+
+      </div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="advance(5)">← Back</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Submit Check-In ✓</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════
+         SCREEN 7 — Thank You
+    ════════════════════════════════ -->
+    <div class="screen" id="screen7">
+      <div class="card-body">
+        <div class="thankyou">
+          <span class="ty-icon">🌿</span>
+          <h2 class="ty-title">Check-In 2 complete.</h2>
+          <p class="ty-body">You've built something real today — a second point in the story of your recovery. Showing up again, when it would have been easier not to, is not a small thing.</p>
+
+          <!-- Progress summary — shown only when baseline scores are available -->
+          <div id="summaryBlock" style="display:none; margin: 1.75rem 0; text-align:left;">
+            <div style="background: linear-gradient(135deg, #203445 0%, #2d5068 100%); border-radius: 14px; padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.75rem;" id="summaryIcon"></div>
+              <div style="font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: #fff; margin-bottom: 0.6rem;" id="summaryHeadline"></div>
+              <div style="font-size: 0.88rem; color: rgba(255,255,255,0.8); line-height: 1.7;" id="summaryBody"></div>
+            </div>
+          </div>
+
+          <div class="journey-dots" style="margin: 1.5rem 0;">
+            <div class="dot-wrap">
+              <div class="dot done"></div>
+              <div class="dot-label">Check-In 1</div>
+            </div>
+            <div class="dot-connector done"></div>
+            <div class="dot-wrap">
+              <div class="dot done"></div>
+              <div class="dot-label">Check-In 2 ✓</div>
+            </div>
+            <div class="dot-connector"></div>
+            <div class="dot-wrap">
+              <div class="dot"></div>
+              <div class="dot-label">Check-In 3</div>
+            </div>
+            <div class="dot-connector"></div>
+            <div class="dot-wrap">
+              <div class="dot"></div>
+              <div class="dot-label">Check-In 4</div>
+            </div>
+          </div>
+
+          <div class="info-box privacy" style="text-align:left; margin-top:1.5rem;">
+            <div class="icon">🔒</div>
+            <div class="text">Your responses are stored securely. Only you and Aimee can access them.</div>
+          </div>
+
+          <div class="info-box purpose" style="text-align:left;">
+            <div class="icon">📈</div>
+            <div class="text">Aimee will review your responses. Your scores are tracked over time — this record of your own resilience will become something you can look back on.</div>
+          </div>
+
+          <p class="ty-body" style="margin-top: 1rem; font-size:0.85rem;">You can close this window and continue your journey.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+<script>
+  // ── URL params ──
+  const urlParams      = new URLSearchParams(window.location.search);
+  const subscriptionId = urlParams.get('subscriptionId') || '';
+
+  // ── State ──
+  let userEmail        = '';
+  let previousProblem  = null;
+  let basePssScore     = null;
+  let basePsychlops    = null;
+  let baseImpact       = null;
+  let baseFunctioning  = null;
+  let baseWellbeing    = null;
+
+  // ── PSS data ──
+  const PSS = [
+    "In the last month, how often have you been upset because of something that happened unexpectedly?",
+    "In the last month, how often have you felt that you were unable to control the important things in your life?",
+    "In the last month, how often have you felt nervous and stressed?",
+    "In the last month, how often have you felt confident about your ability to handle your personal problems?",
+    "In the last month, how often have you felt that things were going your way?",
+    "In the last month, how often have you been able to control irritations in your life?",
+    "In the last month, how often have you felt that you were on top of things?",
+    "In the last month, how often have you been angered because of things that were outside of your control?",
+    "In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
+    "In the last month, how often have you felt that you were effectively coping with important changes in your life?"
+  ];
+
+  const PSS_REVERSED = new Set([3, 4, 5, 6, 9]);
+
+  const PSS_OPTS = [
+    { label: "Never",        value: 0 },
+    { label: "Almost never", value: 1 },
+    { label: "Sometimes",    value: 2 },
+    { label: "Fairly often", value: 3 },
+    { label: "Very often",   value: 4 }
+  ];
+
+  function buildPSSBlock(container, indices) {
+    indices.forEach((qi, pos) => {
+      const div = document.createElement('div');
+      div.className = 'q-block';
+      div.innerHTML = `
+        <p class="q-text"><span class="q-number">${qi + 1}</span> ${PSS[qi]}</p>
+        <div class="options-list">
+          ${PSS_OPTS.map(o => `
+            <label class="opt-label">
+              <input type="radio" name="pss${qi}" value="${o.value}" />
+              <span>${o.label}</span>
+            </label>`).join('')}
+        </div>
+        ${pos < indices.length - 1 ? '<div class="divider"></div>' : ''}
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  buildPSSBlock(document.getElementById('pssBlock1'), [0,1,2,3,4]);
+  buildPSSBlock(document.getElementById('pssBlock2'), [5,6,7,8,9]);
+
+  // ── Radio highlight ──
+  document.addEventListener('change', e => {
+    if (e.target.type === 'radio') {
+      document.querySelectorAll(`input[name="${e.target.name}"]`).forEach(r => {
+        r.closest('.opt-label').classList.remove('selected');
+      });
+      e.target.closest('.opt-label').classList.add('selected');
+    }
+  });
+
+  // ── Step logic ──
+  let current = 1;
+  const TOTAL = 7;
+
+  function setProgress(step) {
+    const pct = Math.round(((step - 1) / (TOTAL - 1)) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('stepLabel').textContent = step < TOTAL ? `Step ${step} of ${TOTAL - 1}` : 'Complete';
+    document.getElementById('stepPct').textContent = pct + '%';
+  }
+
+  function scrollToTop() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  function advance(to) {
+    if (to > current && !validate(current)) return;
+    document.getElementById(`screen${current}`).classList.remove('active');
+    document.getElementById(`screen${to}`).classList.add('active');
+    current = to;
+    setProgress(to);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(scrollToTop, 50);
+  }
+
+  // ── Email lookup → advance to screen 2 ──
+  async function lookupAndAdvance() {
+    const emailVal = document.getElementById('emailInput').value.trim();
+    const errEl    = document.getElementById('err1');
+    const loading  = document.getElementById('lookupLoading');
+    const btn      = document.getElementById('continueBtn1');
+
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      errEl.style.display = 'block';
+      return;
+    }
+
+    errEl.style.display = 'none';
+    userEmail = emailVal;
+
+    loading.classList.add('visible');
+    btn.disabled = true;
+    btn.textContent = 'Looking you up…';
+
+    try {
+      const res  = await fetch('/.netlify/functions/get-previous-checkin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: emailVal })
+      });
+      const data = await res.json();
+
+      if (data.found && data.psychlopsProblem) {
+        previousProblem = data.psychlopsProblem;
+        basePssScore    = data.basePssScore;
+        basePsychlops   = data.basePsychlops;
+        baseImpact      = data.baseImpact      ?? null;
+        baseFunctioning = data.baseFunctioning ?? null;
+        baseWellbeing   = data.baseWellbeing   ?? null;
+        document.getElementById('previousBox').style.display     = 'block';
+        document.getElementById('previousText').textContent      = `"${data.psychlopsProblem}"`;
+        document.getElementById('newUserReminder').style.display = 'none';
+      }
+      // If not found — fail silently, screen 2 shows the generic reminder
+    } catch {
+      // Network error — fail silently, continue normally
+    }
+
+    loading.classList.remove('visible');
+    btn.disabled    = false;
+    btn.textContent = 'Continue →';
+
+    // Advance to screen 2
+    document.getElementById('screen1').classList.remove('active');
+    document.getElementById('screen2').classList.add('active');
+    current = 2;
+    setProgress(2);
+    setTimeout(scrollToTop, 50);
+  }
+
+  // Allow Enter key on email field
+  document.getElementById('emailInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lookupAndAdvance();
+  });
+
+  function validate(step) {
+    const hide = id => document.getElementById(id).style.display = 'none';
+    const show = id => document.getElementById(id).style.display = 'block';
+
+    if (step === 2) {
+      const prob   = document.getElementById('psychProblem').value.trim();
+      const impact = document.querySelector('input[name="impact"]:checked');
+      if (!prob || !impact) { show('err2'); return false; }
+      hide('err2'); return true;
+    }
+
+    if (step === 3) {
+      const func = document.querySelector('input[name="functioning"]:checked');
+      const wb   = document.querySelector('input[name="wellbeing"]:checked');
+      if (!func || !wb) { show('err3'); return false; }
+      hide('err3'); return true;
+    }
+
+    if (step === 4) {
+      for (let i = 0; i < 5; i++) {
+        if (!document.querySelector(`input[name="pss${i}"]:checked`)) { show('err4'); return false; }
+      }
+      hide('err4'); return true;
+    }
+
+    if (step === 5) {
+      for (let i = 5; i < 10; i++) {
+        if (!document.querySelector(`input[name="pss${i}"]:checked`)) { show('err5'); return false; }
+      }
+      hide('err5'); return true;
+    }
+
+    return true;
+  }
+
+  function calcPSS() {
+    let total = 0;
+    for (let i = 0; i < 10; i++) {
+      let v = parseInt(document.querySelector(`input[name="pss${i}"]:checked`).value);
+      if (PSS_REVERSED.has(i)) v = 4 - v;
+      total += v;
+    }
+    return total;
+  }
+
+  function calcPSYCHLOPS() {
+    const impact = parseInt(document.querySelector('input[name="impact"]:checked').value);
+    const func   = parseInt(document.querySelector('input[name="functioning"]:checked').value);
+    const wb     = parseInt(document.querySelector('input[name="wellbeing"]:checked').value);
+    return impact + func + wb;
+  }
+
+  // ── Engagement screen: show/hide rating when feature checked ──
+  function toggleRating(key, checked) {
+    const row = document.getElementById(`rating-${key}`);
+    if (row) row.style.display = checked ? 'block' : 'none';
+    // If unchecked, clear any selected rating
+    if (!checked) {
+      document.querySelectorAll(`input[name="rate-${key}"]`).forEach(r => r.checked = false);
+    }
+  }
+
+  // ── Collect engagement data ──
+  function collectEngagement() {
+    const features = ['nameit', 'breathing', 'reset', 'course', 'dropin'];
+    const featureNames = {
+      nameit:    'Name It Videos',
+      breathing: 'Breathing Exercises',
+      reset:     'Reset Exercises',
+      course:    'Course Modules',
+      dropin:    'Drop-in Sessions'
+    };
+    const used     = [];
+    const ratings  = {};
+
+    features.forEach(key => {
+      const cb = document.querySelector(`input[name="engUsed"][value="${featureNames[key]}"]`);
+      if (cb && cb.checked) {
+        used.push(featureNames[key]);
+        const rating = document.querySelector(`input[name="rate-${key}"]:checked`);
+        ratings[`Engagement: ${featureNames[key]}`] = rating ? parseInt(rating.value) : null;
+      }
+    });
+
+    return { engagementUsed: used.join(', '), engagementRatings: ratings };
+  }
+
+  // ── Progress summary for thank you screen ──
+  function buildSummary(currentPss, currentPsychlops, currentImpact, currentFunctioning, currentWellbeing) {
+    if (basePssScore === null || basePsychlops === null) return null;
+
+    // Deltas — positive = improvement (lower is better for all)
+    const dims = [
+      {
+        key:   'pss',
+        delta: basePssScore - currentPss,
+        label2: 'your capacity to respond to stressful events is really taking off',
+        label1: 'your capacity to respond to stressful events is making gains'
+      },
+      {
+        key:   'functioning',
+        delta: baseFunctioning !== null ? baseFunctioning - currentFunctioning : 0,
+        label2: 'your capacity to manage daily life has meaningfully shifted',
+        label1: 'your capacity to manage daily life is showing signs of movement'
+      },
+      {
+        key:   'wellbeing',
+        delta: baseWellbeing !== null ? baseWellbeing - currentWellbeing : 0,
+        label2: 'your overall sense of wellbeing has meaningfully shifted',
+        label1: 'we can see your overall sense of wellbeing is beginning to stir'
+      },
+      {
+        key:   'impact',
+        delta: baseImpact !== null ? baseImpact - currentImpact : 0,
+        label2: 'how much this has been weighing on you is easing',
+        label1: 'the weight of this is beginning to lift'
+      }
+    ];
+
+    // Find dimensions that improved
+    const improved = dims
+      .filter(d => d.delta >= 1)
+      .sort((a, b) => b.delta - a.delta);
+
+    const anyWorse = dims.some(d => d.delta < -1);
+
+    if (improved.length === 0 && anyWorse) {
+      return {
+        icon: '🤝',
+        headline: 'This has been a harder stretch.',
+        body: `These scores are telling us this has been a harder stretch — and we want you to know that we see that. This is not a measure of how hard you've worked or how much you're trying. Hard periods are part of recovery, not evidence against it. What matters most right now is that you showed up today, when it would have been very easy not to. That is not nothing. That is everything. You are not alone in this — and you are not stuck.`
+      };
+    }
+
+    if (improved.length === 0) {
+      return {
+        icon: '⚓',
+        headline: "You're holding steady.",
+        body: `You're holding — and in these early weeks, that is real work. Stability after loss doesn't happen by accident. It happens because you keep choosing to engage, to show up, to do the next thing even when it's hard. Your scores haven't moved dramatically yet, and that's okay. Roots don't look like growth from the outside. But you are building something underneath all of this that will hold. Stay with it.`
+      };
+    }
+
+    // Build called-out improvement phrases
+    const top = improved.slice(0, 2);
+    const phrases = top.map(d => d.delta >= 2 ? d.label2 : d.label1);
+    let improvementLine = '';
+    if (phrases.length === 2) {
+      improvementLine = `Two things stand out: ${phrases[0]}, and ${phrases[1]}.`;
+    } else {
+      improvementLine = `Something stands out: ${phrases[0]}.`;
+    }
+
+    return {
+      icon: '📈',
+      headline: 'You did that.',
+      body: `You did that. Not the program — you. ${improvementLine} That's not luck — that's you doing the work, even on the days it didn't feel like work. You may not have felt yourself changing — healing from this kind of loss often happens quietly, underneath everything. But it's happening. We can see it. Keep going.`
+    };
+  }
+
+  async function submitForm() {
+    if (!validate(5)) return;
+
+    for (let i = 0; i < 10; i++) {
+      if (!document.querySelector(`input[name="pss${i}"]:checked`)) {
+        const err = document.getElementById('err5');
+        err.textContent = `Please go back and make sure all stress questions are answered (missing question ${i + 1}).`;
+        err.style.display = 'block';
+        return;
+      }
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Saving...';
+
+    const pssAnswers = {};
+    for (let i = 0; i < 10; i++) {
+      pssAnswers[`PSS Q${i + 1}`] = parseInt(document.querySelector(`input[name="pss${i}"]:checked`).value);
+    }
+
+    const { engagementUsed, engagementRatings } = collectEngagement();
+
+    const payload = {
+      email:                userEmail,
+      subscriptionId,
+      checkInNumber:        2,
+      assessmentDate:       new Date().toISOString(),
+      psychlopsProblem:     document.getElementById('psychProblem').value.trim(),
+      psychlopsImpact:      parseInt(document.querySelector('input[name="impact"]:checked').value),
+      psychlopsFunctioning: parseInt(document.querySelector('input[name="functioning"]:checked').value),
+      psychlopsWellbeing:   parseInt(document.querySelector('input[name="wellbeing"]:checked').value),
+      psychlopsTotal:       calcPSYCHLOPS(),
+      pssTotalScore:        calcPSS(),
+      previousProblem:      previousProblem || '',
+      engagementUsed,
+      ...engagementRatings,
+      ...pssAnswers
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/submit-checkin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Server error');
+
+      // Build and inject progress summary before showing thank you screen
+      const summary = buildSummary(
+        payload.pssTotalScore,
+        payload.psychlopsTotal,
+        payload.psychlopsImpact,
+        payload.psychlopsFunctioning,
+        payload.psychlopsWellbeing
+      );
+      if (summary) {
+        document.getElementById('summaryBlock').style.display = 'block';
+        document.getElementById('summaryIcon').textContent     = summary.icon;
+        document.getElementById('summaryHeadline').textContent = summary.headline;
+        document.getElementById('summaryBody').textContent     = summary.body;
+      }
+
+      advance(7);
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('stepLabel').textContent    = 'Complete';
+      document.getElementById('stepPct').textContent      = '100%';
+
+    } catch (err) {
+      btn.disabled    = false;
+      btn.textContent = 'Submit Check-In ✓';
+      const errEl = document.getElementById('err5');
+      errEl.textContent = `Something went wrong — ${err.message}. Please try again.`;
+      errEl.style.display = 'block';
+    }
+  }
+
+  setProgress(1);
+</script>
+</body>
+</html>
