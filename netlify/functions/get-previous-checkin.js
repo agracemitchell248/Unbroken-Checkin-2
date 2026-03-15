@@ -81,4 +81,9 @@ exports.handler = async function (event) {
     });
 
     req.on('error', (err) => {
-      resolve({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify({
+      resolve({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify({ found: false }) });
+    });
+
+    req.end();
+  });
+};
