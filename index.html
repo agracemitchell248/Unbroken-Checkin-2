@@ -78,6 +78,7 @@ textarea { resize: none; min-height: 60px; line-height: 1.4; }
 
 .nav-bar { flex-shrink: 0; background: var(--warm-white); border-top: 1px solid var(--border); padding: 0.6rem 1.1rem; display: flex; gap: 0.6rem; align-items: center; justify-content: flex-end; }
 .btn { padding: 0.55rem 1.15rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: var(--navy); color: #fff; }
 .btn-primary:disabled { background: #b0bec5; cursor: not-allowed; }
 .btn-ghost { background: transparent; color: var(--mid); border: 1.5px solid var(--border); }
@@ -140,7 +141,7 @@ textarea { resize: none; min-height: 60px; line-height: 1.4; }
   <div class="card">
 
     <!-- 1: Welcome + email -->
-    <div class="screen active" id="screen1">
+    <div class="screen active" id="screen1" data-req-msg="Please enter a valid email address.">
       <div class="card-body">
         <div class="eyebrow">Welcome Back</div>
         <h1 class="screen-title">You came back. That matters.</h1>
@@ -260,7 +261,7 @@ textarea { resize: none; min-height: 60px; line-height: 1.4; }
     </div>
 
     <!-- 6: Engagement -->
-    <div class="screen" id="screen6">
+    <div class="screen" id="screen6" data-req-msg="If you checked a feature, please rate how helpful it was before submitting.">
       <div class="card-body">
         <div class="eyebrow">How UnBroken Is Working For You</div>
         <h2 class="screen-title">One last thing.</h2>
@@ -291,9 +292,10 @@ textarea { resize: none; min-height: 60px; line-height: 1.4; }
             <div class="rating-row" id="rating-dropin" style="display:none;"><p class="rating-prompt">How helpful?</p><div class="rating-opts"><label class="rating-opt"><input type="radio" name="rate-dropin" value="1"><span>Not helpful</span></label><label class="rating-opt"><input type="radio" name="rate-dropin" value="2"><span>Slightly</span></label><label class="rating-opt"><input type="radio" name="rate-dropin" value="3"><span>Moderately</span></label><label class="rating-opt"><input type="radio" name="rate-dropin" value="4"><span>Very helpful</span></label><label class="rating-opt"><input type="radio" name="rate-dropin" value="5"><span>Extremely helpful</span></label></div></div>
           </div>
         </div>
+        <div class="error-banner" id="err6" style="margin-top:0.6rem;"></div>
         <div class="info-box reminder" style="margin-top:0.6rem;"><div class="icon">&#128161;</div><div class="text">Haven't used some yet? Just check what you've tried, or continue without selecting anything.</div></div>
       </div>
-      <div class="nav-bar"><button class="btn btn-ghost" onclick="advance(5)">&larr; Back</button><button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Submit Check-In &#10003;</button></div>
+      <div class="nav-bar"><button class="btn btn-ghost" onclick="advance(5)">&larr; Back</button><button class="btn btn-primary" id="submitBtn" data-req-final onclick="submitForm()">Submit Check-In &#10003;</button></div>
     </div>
 
     <!-- 7: Thank you -->
@@ -397,6 +399,7 @@ function advance(to) {
   current = to;
   setProgress(to);
 }
+
 
 async function lookupAndAdvance() {
   const emailVal = document.getElementById('emailInput').value.trim();
@@ -593,13 +596,204 @@ async function submitForm() {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Submit Check-In ✓';
-    const errEl = document.getElementById('err5');
+    const errEl = document.getElementById('err6');
     errEl.textContent = `Something went wrong, ${err.message}. Please try again.`;
     errEl.style.display = 'block';
   }
 }
 
 setProgress(1);
+</script>
+<style>
+/* Required-answer guard */
+.req-missing { outline: 2px solid #c0392b !important; outline-offset: 2px; border-radius: 8px; }
+.req-msg { display: none; flex-shrink: 0; margin: 0 1rem 0.45rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: #fdf0ef; border: 1px solid #e8b4b0; color: #a93226; font-family: inherit; font-size: 0.74rem; line-height: 1.35; text-align: left; }
+.req-msg.show { display: block; }
+.req-locked { opacity: 0.55; }
+</style>
+<script>
+/* Required-answer guard: the forward/submit button only works once every
+   visible question in the current screen is answered.
+   - textareas, text/email inputs and selects must be filled
+   - radio groups need a choice; sliders must be moved or tapped
+   - [data-req-group="<selector>"] needs at least one matching child (chips, checkboxes, pips)
+   - [data-req-custom="<name>"] uses window.REQ_CUSTOM[name]()
+   - [data-optional] opts a field out (an optional email must still be valid if filled)
+   - [data-req-always] keeps a field required while hidden (e.g. one-at-a-time questions)
+   - [data-req-scope] limits an inner "Next" button to its own block
+   - [data-req-final] on a submit button re-checks every screen */
+(function () {
+  var CFG = Object.assign({
+    screens: '.screen',
+    active: '.screen.active',
+    forward: '.nav-bar .btn-primary',
+    msg: 'Please answer every question on this screen before continuing.'
+  }, window.REQ_CONFIG || {});
+  var CUSTOM = window.REQ_CUSTOM || {};
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var shown = [];
+
+  function hiddenIn(node, root) {
+    for (var n = node; n && n !== root; n = n.parentElement) {
+      if (getComputedStyle(n).display === 'none') return true;
+    }
+    return false;
+  }
+  function skip(el, root) {
+    if (el.closest('[data-optional]')) return true;
+    if (el.closest('[data-req-always]')) return false;
+    return hiddenIn(el.closest('label') || el, root);
+  }
+  function filled(el) {
+    if (el.tagName === 'SELECT') return !!el.value;
+    var v = el.value.trim();
+    if (!v) return false;
+    return el.type !== 'email' || EMAIL_RE.test(v);
+  }
+
+  function requirements(root) {
+    var items = [];
+    root.querySelectorAll('textarea, input[type="text"], input[type="email"], select').forEach(function (el) {
+      if (el.type === 'email' && el.closest('[data-optional]') && !hiddenIn(el, root)) {
+        items.push({ mark: el, ok: function () { return !el.value.trim() || EMAIL_RE.test(el.value.trim()); } });
+        return;
+      }
+      if (skip(el, root)) return;
+      items.push({ mark: el, ok: function () { return filled(el); } });
+    });
+    var radios = {};
+    root.querySelectorAll('input[type="radio"][name]').forEach(function (el) {
+      if (skip(el, root) || radios[el.name]) return;
+      radios[el.name] = true;
+      var name = el.name;
+      var label = el.closest('label') || el;
+      items.push({
+        mark: label.parentElement || label,
+        ok: function () { return !!root.querySelector('input[type="radio"][name="' + CSS.escape(name) + '"]:checked'); }
+      });
+    });
+    root.querySelectorAll('input[type="range"]').forEach(function (el) {
+      if (skip(el, root)) return;
+      items.push({ mark: el.parentElement, ok: function () { return el.dataset.touched === '1'; } });
+    });
+    root.querySelectorAll('[data-req-group]').forEach(function (el) {
+      if (el.closest('[data-optional]') || (!el.closest('[data-req-always]') && hiddenIn(el, root))) return;
+      var sel = el.getAttribute('data-req-group');
+      items.push({ mark: el, ok: function () { return !!el.querySelector(sel); } });
+    });
+    root.querySelectorAll('[data-req-custom]').forEach(function (el) {
+      if (hiddenIn(el, root)) return;
+      var fn = CUSTOM[el.getAttribute('data-req-custom')];
+      if (fn) items.push({ mark: el, ok: function () { return !!fn(el); } });
+    });
+    return items;
+  }
+  function missing(root) {
+    return requirements(root).filter(function (r) { return !r.ok(); });
+  }
+
+  function activeScreen() { return document.querySelector(CFG.active); }
+  function scopeFor(btn) {
+    return btn.closest('[data-req-scope]') || btn.closest(CFG.screens) || activeScreen();
+  }
+  function msgBox(btn) {
+    var host = btn.closest('[data-req-scope]') ? btn : (btn.closest('.nav-bar, .nav') || btn);
+    var prev = host.previousElementSibling;
+    if (prev && prev.classList.contains('req-msg')) return prev;
+    var box = document.createElement('div');
+    box.className = 'req-msg';
+    box.setAttribute('role', 'alert');
+    host.parentNode.insertBefore(box, host);
+    return box;
+  }
+  function clearShown() {
+    shown.forEach(function (r) { r.mark.classList.remove('req-missing'); });
+    shown = [];
+  }
+
+  function block(btn, list, text) {
+    if (list.every(function (r) { return r.mark.matches('input[type="email"]'); })) {
+      text = 'Please enter a valid email address' + (list[0].mark.closest('[data-optional]') ? ', or leave it blank.' : '.');
+    }
+    clearShown();
+    list.forEach(function (r) { r.mark.classList.add('req-missing'); });
+    shown = list;
+    var box = msgBox(btn);
+    box.textContent = text;
+    box.classList.add('show');
+    var first = list[0].mark;
+    if (first.getClientRects().length) {
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (first.matches('textarea, input, select')) first.focus({ preventScroll: true });
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest(CFG.forward + ', .question-next, [data-req-final]');
+    if (!btn || btn.disabled) return;
+    var screen = activeScreen();
+    if (!screen) return;
+    var inScreen = screen.contains(btn);
+    if (!inScreen && !btn.matches(CFG.forward)) return;
+
+    if (btn.hasAttribute('data-req-final')) {
+      var all = document.querySelectorAll(CFG.screens);
+      for (var i = 0; i < all.length; i++) {
+        var gaps = missing(all[i]);
+        if (!gaps.length) continue;
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (all[i] === screen) block(btn, gaps, screen.getAttribute('data-req-msg') || CFG.msg);
+        else block(btn, gaps, 'Step ' + (i + 1) + ' still has unanswered questions. Please go back and complete it before submitting.');
+        return;
+      }
+      return;
+    }
+
+    var scope = inScreen ? scopeFor(btn) : screen;
+    var gaps = missing(scope);
+    if (!gaps.length) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    block(btn, gaps, scope.getAttribute('data-req-msg') || CFG.msg);
+  }, true);
+
+  function refresh() {
+    if (shown.length) {
+      shown = shown.filter(function (r) {
+        if (r.ok()) { r.mark.classList.remove('req-missing'); return false; }
+        return true;
+      });
+      if (!shown.length) document.querySelectorAll('.req-msg.show').forEach(function (b) { b.classList.remove('show'); });
+    }
+    var screen = activeScreen();
+    document.querySelectorAll('.req-locked').forEach(function (b) { b.classList.remove('req-locked'); });
+    if (!screen) return;
+    var btns = Array.prototype.slice.call(screen.querySelectorAll(CFG.forward + ', .question-next'));
+    document.querySelectorAll(CFG.forward).forEach(function (b) { if (!b.closest(CFG.screens) && btns.indexOf(b) < 0) btns.push(b); });
+    btns.forEach(function (b) {
+      var scope = screen.contains(b) ? scopeFor(b) : screen;
+      if (missing(scope).length) b.classList.add('req-locked');
+    });
+  }
+  function later() { setTimeout(refresh, 0); }
+
+  function touch(e) {
+    if (e.target.matches && e.target.matches('input[type="range"]')) e.target.dataset.touched = '1';
+  }
+  document.addEventListener('pointerdown', touch, true);
+  document.addEventListener('keydown', touch, true);
+  document.addEventListener('input', function (e) { touch(e); later(); }, true);
+  document.addEventListener('change', later, true);
+  document.addEventListener('click', function (e) {
+    // a new screen should start without stale warnings
+    if (e.target.closest('.btn-ghost, #btn-back')) {
+      clearShown();
+      document.querySelectorAll('.req-msg.show').forEach(function (b) { b.classList.remove('show'); });
+    }
+    later();
+  });
+  document.addEventListener('keyup', later);
+  refresh();
+})();
 </script>
 </body>
 </html>
